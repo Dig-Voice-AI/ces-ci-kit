@@ -1,0 +1,59 @@
+# Phase 3 secret scan config. Extends gitleaks' ~200 built-in rules
+# (AWS, GitHub, Slack, GCP API keys, private keys, ...) with Salesforce + GCP SA rules.
+title = "CI kit gitleaks config (generic)"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "salesforce-consumer-key"
+description = "Salesforce connected-app consumer key / client ID (3MVG...)"
+regex = '''\b3MVG[0-9A-Za-z._]{60,}\b'''
+keywords = ["3mvg"]
+
+[[rules]]
+id = "salesforce-client-secret"
+description = "Salesforce client/consumer secret assigned in code or config"
+regex = '''(?i)(?:sf|salesforce|consumer|client)[_\-\s]*secret["']?(?:\s*[:=]\s*|\s+)["']?([0-9A-Fa-f]{32,128}|[0-9A-Za-z]{40,128})\b'''
+secretGroup = 1
+keywords = ["secret"]
+
+[[rules]]
+id = "salesforce-password-or-token"
+description = "Salesforce password or security token assigned in code or config"
+regex = '''(?i)(?:sf|salesforce|sfdc|sandbox)[_\-]*(?:password|passwd|pwd|security[_\-]?token)["'\s]*[:=]\s*["']([^"'\s$\{]{8,})["']'''
+secretGroup = 1
+keywords = ["password", "passwd", "pwd", "token"]
+
+[[rules]]
+id = "salesforce-access-token"
+description = "Salesforce session / access token (00D...!...)"
+regex = '''\b00D[0-9A-Za-z]{12,15}![0-9A-Za-z._]{40,}'''
+keywords = ["00d"]
+
+[[rules]]
+id = "gcp-service-account-key"
+description = "GCP service account JSON key"
+regex = '''"type"\s*:\s*"service_account"[\s\S]{0,600}"private_key"\s*:\s*"-----BEGIN'''
+keywords = ["service_account"]
+
+[[allowlists]]
+description = "Placeholders and test fixtures"
+regexes = ['''(?i)(REPLACE_ME|your[_-]?(secret|password|token)|<[A-Z_]+>|\$\{[A-Z_]+\}|example|placeholder|xxxx)''']
+paths = ['''(^|/)\.gitleaks\.toml$''']
+
+# Optional, repo-specific: fixture IDs that look like secrets to generic rules.
+# Allowlist ONLY by specific prefixes your repo uses (e.g. sim__, golden_).
+# Never allowlist a broad shape like "any snake_case": that hides real hits such as
+# kit.env-style values and generic password/API-key matches (automated code review finding in a reference repo).
+# [[allowlists]]
+# description = "Fixture identifiers with repo-specific prefixes are not secrets"
+# regexTarget = "secret"
+# regexes = ['''^(?:sim__|golden_)[a-z0-9_]+$''']
+
+# Public upstream commit pin for the SCRAPI audit (not a secret). Allowlist the EXACT SHA only;
+# update this line in the same PR when you bump the pin.
+[[allowlists]]
+description = "Pinned public SCRAPI commit SHA"
+regexTarget = "secret"
+regexes = ['''^1541b4bf6a4ab037f33122d3b1f3a93a0035f7e0$''']

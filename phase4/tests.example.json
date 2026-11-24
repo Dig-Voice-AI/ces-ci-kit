@@ -1,0 +1,8 @@
+{
+  "paths": ["testcases"],
+  "ignore": ["testcases/toolkit"],
+  "deselect": [
+    "testcases/chat/test_webchat_widget.py::TestWebchatWidget::test_live_health_endpoint",
+    "testcases/chat/test_webchat_widget.py::TestWebchatWidget::test_live_index_endpoint_and_headers"
+  ]
+}

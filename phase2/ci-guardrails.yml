@@ -1,0 +1,35 @@
+name: CI guardrails (Phase 2)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-guardrails-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guardrails:
+    name: Repo guardrails
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+        # If the repo has a symlink that can't be materialized on Linux (e.g.
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.14'
+      # Only needed if a command in .ci/guardrails.json requires it (e.g. a YAML-based hygiene validator needs PyYAML).
+      - name: Install extra deps
+        run: pip install pyyaml
+      - name: Run guardrails
+        run: python .ci/check_guardrails.py --config .ci/guardrails.json

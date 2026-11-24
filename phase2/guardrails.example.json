@@ -1,0 +1,32 @@
+{
+  "_comment": "ANONYMIZED EXAMPLE. Shape of a real DEV-repo rule set; every value below is fictional. Copy to .ci/guardrails.json and replace the <PLACEHOLDER> / example values.",
+  "constant_rules": [
+    {
+      "name": "telephony_menu_id",
+      "paths": ["callbacks/*.py"],
+      "assign_name_contains": ["MENU_ID"],
+      "dict_keys": ["menu_id"],
+      "kwarg_contains": ["menu_id"],
+      "allowed": [101, 102],
+      "allowed_by_name": [{"contains": "SALES", "allowed": [101]}, {"contains": "SERVICE", "allowed": [102]}],
+      "forbidden": {"901": "901 is the example PROD menu ID. This is the DEV repo: use 101 (Sales) or 102 (Service). A PROD ID here would route DEV callers into the PROD queue."},
+      "hint": "Example DEV menu IDs: 101 = Sales, 102 = Service."
+    },
+    {
+      "name": "gcp_project",
+      "paths": ["scripts/*.py"],
+      "assign_name_contains": ["PROJECT"],
+      "kwarg_contains": ["project"],
+      "allowed": ["<DEV_GCP_PROJECT_ID>"],
+      "forbidden": {"<PROD_GCP_PROJECT_ID>": "PROD project in a DEV repo."},
+      "hint": "Only the DEV project is allowed here."
+    }
+  ],
+  "json_baselines": [
+    {"file": "tools/openapi/<example-toolset>.json", "key_path": ["authentication"], "message": "Toolset auth must not be edited (a full sync rewrites it)."}
+  ],
+  "baseline_file": ".ci/guardrail_baseline.json",
+  "commands": [
+    {"name": "agent_hygiene", "run": ["{python}", "scripts/validate_agent_hygiene.py"], "message": "An agent, tool, or callback reference is broken."}
+  ]
+}

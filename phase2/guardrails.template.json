@@ -1,0 +1,41 @@
+{
+  "constant_rules": [
+    {
+      "name": "example_rule",
+      "paths": [
+        "src/**/*.py"
+      ],
+      "assign_name_contains": [
+        "QUEUE_ID"
+      ],
+      "known_names": [
+        "QUEUE_ID"
+      ],
+      "dict_keys": [
+        "queue_id"
+      ],
+      "kwarg_contains": [
+        "queue_id"
+      ],
+      "allowed": [
+        1
+      ],
+      "allowed_by_name": [],
+      "forbidden": {
+        "99": "99 is the PROD value."
+      },
+      "hint": ""
+    }
+  ],
+  "json_baselines": [
+    {
+      "file": "config/auth.json",
+      "key_path": [
+        "authentication"
+      ],
+      "message": "Auth must not change."
+    }
+  ],
+  "baseline_file": ".ci/guardrail_baseline.json",
+  "commands": []
+}

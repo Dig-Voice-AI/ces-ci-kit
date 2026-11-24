@@ -1,0 +1,46 @@
+name: CI live smoke (Phase 5 - read-only CES config)
+
+# Keyless (WIF) read-only check that the CES app exists and is
+# configured as expected. GET/LIST only: no sessions, conversations, evals, export.
+# Deliberately NOT run on pull_request (live drift/outage shouldn't redden PRs,
+# and the WIF condition only trusts main / workflow_dispatch / schedule).
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 11 * * *'   # nightly, adjust to your timezone
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ci-smoke
+  cancel-in-progress: true
+
+jobs:
+  live-smoke:
+    name: CES app live smoke (read-only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true   # non-blocking
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.14'
+      - id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-ci/providers/<PROVIDER_ID>   # PLACEHOLDER: printed by setup-gcp-ci.sh
+          service_account: ci-readonly@<GCP_PROJECT_ID>.iam.gserviceaccount.com   # PLACEHOLDER
+          token_format: access_token
+          create_credentials_file: false
+      - name: Check live app config
+        env:
+          CES_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: python .ci/check_live_app.py --expect .ci/smoke_expect.json

@@ -1,0 +1,16 @@
+{
+  "scrapi_commit": "<SAME_SHA_AS_scrapi-audit.json; written by --capture>",
+  "reviewed_on": "YYYY-MM-DD",
+  "reviewed_by": "<name>",
+  "policy": "Reviewed FALSE POSITIVES ONLY. Real findings must stay out of this file so they stay reported.",
+  "findings": [
+    {
+      "file": "app/agents/Example_Agent/instruction.txt",
+      "rule_id": "I006",
+      "severity": "warning",
+      "message": "Possible hardcoded phone number: '800-555-0100'",
+      "review_reason": "Published customer-service number the agent must say verbatim; content, not data.",
+      "reviewed_on": "YYYY-MM-DD"
+    }
+  ]
+}

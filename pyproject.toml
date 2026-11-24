@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ces-ci-kit"
+version = "1.0.0"
+description = "Config-driven 5-phase DevSecOps CI/CD toolkit for Google Cloud CX Agent Studio (CES)"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+
+[dependency-groups]
+dev = [
+  "mypy>=1.13",
+  "pytest>=8.0",
+  "ruff>=0.8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["phase2", "phase3", "phase4", "phase5"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = ["cxas_scrapi.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "S", "RUF", "ANN", "PT", "PTH", "EXE", "C4", "PIE", "RET"]
+ignore = [
+  "ANN401", # JSON AST/config structures legitimately accept Any at dynamic boundaries
+  "S603",   # Controlled CLI subprocess invocations (git, gcloud, pytest) with validated args
+  "S607",   # Standard system binaries (git, gcloud) resolved from PATH in CI runners
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"

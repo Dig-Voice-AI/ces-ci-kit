@@ -1,0 +1,4 @@
+# PII allowlist (published numbers/domains only). Owner approves every entry.
+# phone:<number> | email-domain:<domain> | email:<address> | regex:<python regex>
+email-domain:example.com
+email-domain:iam.gserviceaccount.com

@@ -1,0 +1,81 @@
+name: CI evals (Phase 5 - DEV test widget, non-blocking)
+
+# Runs the routing smoke packs against the DEV *test widget* deployment
+# (<TEST_DEPLOYMENT_ID>, never the live deployment) with tool fakes ON, so no real backend
+# (e.g. Salesforce) is called. Never pass --no-fakes here.
+# Signs in with Workload Identity Federation as ci-evals (custom role
+# ciEvalRunner: config read + run sessions/evaluations; no conversations,
+# no edits). The SA only trusts tokens for refs/heads/main, so this runs
+# from main only (nightly or by hand). No stored key.
+# Costs Gemini tokens per turn: keep packs small.
+
+on:
+  schedule:
+    - cron: '23 12 * * *'   # nightly, ~06:23/07:23 America/Chicago
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # lets the job request a GitHub OIDC token for WIF
+
+concurrency:
+  group: ci-evals
+  cancel-in-progress: false
+
+jobs:
+  evals:
+    name: CES evals (test widget)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true   # non-blocking: a report, not a gate
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      GCP_PROJECT_ID: <GCP_PROJECT_ID>
+      GCP_REGION: us
+      CES_APP_ID: <CES_APP_ID>
+      CES_DEPLOYMENT_ID: <TEST_DEPLOYMENT_ID>   # test widget, NOT live deployment
+      EVAL_PACKS: testcases/graph-clean-routing-smoke.json testcases/handoff-transfer-rules-smoke.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.14'
+      - name: Sign in to Google Cloud (WIF, no key)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-ci/providers/<PROVIDER_ID>
+          service_account: ci-evals@<GCP_PROJECT_ID>.iam.gserviceaccount.com
+      # ces_client.py mints its token with `gcloud auth print-access-token`.
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+      - name: Run eval packs (deployed test widget, tool fakes ON)
+        run: |
+          mkdir -p "$RUNNER_TEMP/evals"
+          rc=0
+          for pack in $EVAL_PACKS; do
+            name=$(basename "$pack" .json)
+            python "${CES_RUN_EVAL:-scripts/run_eval.py}" \
+              --test-file "$pack" --deployed --tool-fakes \
+              --output "$RUNNER_TEMP/evals/$name.json" || rc=1
+          done
+          exit $rc
+      - name: Summarize
+        if: always()
+        run: |
+          shopt -s nullglob
+          files=("$RUNNER_TEMP"/evals/*.json)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No eval results were written (see the run step log)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            python scripts/ci/summarize_evals.py "${files[@]}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ces-evals
+          path: ${{ runner.temp }}/evals/
+          retention-days: 14
+          if-no-files-found: ignore

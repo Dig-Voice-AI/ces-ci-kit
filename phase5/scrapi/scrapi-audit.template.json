@@ -1,0 +1,9 @@
+{
+  "layout": "native",
+  "export": "cxas_app/<app_folder>",
+  "evals": "evals",
+  "baseline": "docs/qa/scrapi-reviewed.json",
+  "scrapi_commit": "1541b4bf6a4ab037f33122d3b1f3a93a0035f7e0",
+  "out": "audit-output/scrapi.json",
+  "_layout_help": "native = SCRAPI/cxas_app layout (app.json + agents/<name>/<name>.json). flat = CES export layout (app.json, agents/<id>.json + agents/<id>.md, callbacks/*.py, tools.json, toolsets.json, guardrails.json) that is projected to native in a temp dir."
+}

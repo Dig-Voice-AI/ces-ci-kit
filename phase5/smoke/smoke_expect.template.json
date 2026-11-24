@@ -1,0 +1,12 @@
+{
+  "_about": "Phase 5 live smoke: expected config of the CES app. Read-only GETs/LISTs only. Copy to .ci/smoke_expect.json, replace every <PLACEHOLDER>, and update in the same PR as an approved app change.",
+  "project": "<GCP_PROJECT_ID>",
+  "location": "us",
+  "app_id": "<CES_APP_ID>",
+  "root_agent": "<root_agent_name>",
+  "display_name_contains": "<text expected in the app display name, or remove>",
+  "agents": ["<root_agent_name>"],
+  "min_tools": 1,
+  "required_tools": ["<tool_name_1>", "<tool_name_2>"],
+  "min_deployments": 1
+}

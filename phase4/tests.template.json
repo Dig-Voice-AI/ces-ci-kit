@@ -1,0 +1,6 @@
+{
+  "paths": ["tests"],
+  "ignore": [],
+  "deselect": [],
+  "extra_args": []
+}
